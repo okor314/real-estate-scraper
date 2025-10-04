@@ -31,6 +31,27 @@ class Scraper:
         self.page.goto(BASE_URL)
         self.search(searchQuery)
 
+class Filter:
+    def __init__(self):
+        self.statusType = 'ForRent'
+        self.minPrice: int | None = None
+        self.maxPrice: int | None = None
+        self.minBedrooms: int = 0
+        self.minBathrooms: int = 0
+
+    def setFilterParameters(self, **kwargs):
+        for attrName, attrValue in kwargs.items():
+            setattr(self, attrName, attrValue)
+
 if __name__ == '__main__':
-    with Stealth().use_sync(sync_playwright()) as playwright:
-        Scraper(playwright, 'Montgomery, AL')
+    # with Stealth().use_sync(sync_playwright()) as playwright:
+    #     Scraper(playwright, 'Montgomery, AL')
+
+    f = Filter()
+    d = {
+        'statusType': 'ForSale',
+        'minBedrooms': 2
+    }
+    print(f.statusType, f.maxPrice, f.minBedrooms)
+    f.setFilterParameters(**d)
+    print(f.statusType, f.maxPrice, f.minBedrooms)
