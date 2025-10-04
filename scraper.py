@@ -8,8 +8,7 @@ class Scraper:
         self.browser = playwright.chromium.launch(headless=False)
         self.page = self.browser.new_page()
 
-        self.page.goto(BASE_URL)
-        self.search(searchQuery)
+        self.scrape(searchQuery)
 
         self.browser.close()
 
@@ -27,6 +26,10 @@ class Scraper:
             skipBtn.click()
         except:
             pass
+
+    def scrape(self, searchQuery: str):
+        self.page.goto(BASE_URL)
+        self.search(searchQuery)
 
 if __name__ == '__main__':
     with Stealth().use_sync(sync_playwright()) as playwright:
