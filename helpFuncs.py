@@ -1,4 +1,6 @@
 import random
+from extractors import Extractor, CatalogExtractor
+import json
 
 def isKeyExist(json_obj, key) -> bool:
     if type(json_obj) is dict:
@@ -25,3 +27,13 @@ def rateLimiter(n: int):
     sigma = pauseDuration / 3
     pauseDuration = pauseDuration + random.uniform(-sigma, sigma)
     return int(pauseDuration * 1000)
+
+def extractData(json_obj, extractor: Extractor):
+    return extractor().extract(json_obj)
+
+if __name__ == '__main__':
+    d = {'cat1': {'searchResults': {'listResults': 'pupupu'}}}
+    #print(extractData(d, CatalogExtractor))
+    with open('./data.json', 'r') as f:
+        l = json.load(f)
+        print(len(l))
