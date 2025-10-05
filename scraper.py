@@ -1,6 +1,10 @@
 from playwright.sync_api import sync_playwright, Playwright
 from playwright_stealth import Stealth
 
+import json
+from helpFuncs import *
+from extractors import CatalogExtractor, CatalogDomExtractor
+
 BASE_URL = 'https://www.zillow.com/'
 
 class Scraper:
@@ -21,14 +25,42 @@ class Scraper:
         except:
             pass
 
-    def scrape(self, searchQuery: str):
+    def scrape(self, searchQuery: str, requestsPerMin = 15, pathToSave='./data.json'):
+        allApartments = []
+
         self.page.goto(BASE_URL)
         self.search(searchQuery)
+        
+        dataContainer = self.page.wait_for_selector('script#__NEXT_DATA__', state='attached', timeout=25000)
+        dataFromDOM = json.loads(dataContainer.inner_text())
+        data = extractData(dataFromDOM, CatalogDomExtractor)
+        allApartments.extend(data)
+
+        try:
+            while True:
+                with self.page.expect_response(lambda response: fetchResponse(response), timeout=10000) as response_info:
+                    response = response_info.value
+                response_json = response.json()
+                data = extractData(response_json, CatalogExtractor)
+                allApartments.extend(data)
+
+                if self.page.locator('a[title="Next page"]').is_disabled():
+                    break
+                
+                self.page.wait_for_timeout(rateLimiter(requestsPerMin))
+                self.page.locator('a[title="Next page"]').click()
+        finally:
+            with open(pathToSave, 'w') as f:
+                json.dump(allApartments, f, indent=4)
 
     def run(self, searchQuery):
         with Stealth().use_sync(sync_playwright()) as playwright:
             self.browser = playwright.chromium.launch(headless=False)
             self.page = self.browser.new_page()
+            self.page.route("**/*", lambda route, request: 
+               route.abort() if request.resource_type in ["image", "media", "font", "stylesheet"] 
+               else route.continue_()
+            )
 
             self.scrape(searchQuery)
 
