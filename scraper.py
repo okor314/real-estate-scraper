@@ -31,11 +31,16 @@ class Scraper:
         self.page.goto(BASE_URL)
         self.search(searchQuery)
         
-        dataContainer = self.page.wait_for_selector('script#__NEXT_DATA__', state='attached', timeout=25000)
-        dataFromDOM = json.loads(dataContainer.inner_text())
-        data = extractData(dataFromDOM, CatalogDomExtractor)
-        allApartments.extend(data)
-
+        # Get apartments data from first page
+        try:
+            dataContainer = self.page.wait_for_selector('script#__NEXT_DATA__', state='attached', timeout=25000)
+            dataFromDOM = json.loads(dataContainer.inner_text())
+            data = extractData(dataFromDOM, CatalogDomExtractor)
+            allApartments.extend(data)
+        except:
+            pass
+        
+        # Collect data from next pages
         try:
             while True:
                 with self.page.expect_response(lambda response: fetchResponse(response), timeout=10000) as response_info:
