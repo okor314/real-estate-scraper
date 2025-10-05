@@ -4,14 +4,8 @@ from playwright_stealth import Stealth
 BASE_URL = 'https://www.zillow.com/'
 
 class Scraper:
-    def __init__(self, playwright: Playwright, searchQuery: str):
-        self.browser = playwright.chromium.launch(headless=False)
-        self.page = self.browser.new_page()
-
-        self.scrape(searchQuery)
-
-        self.browser.close()
-
+    def __init__(self):
+        pass
 
     def search(self, searchQuery: str):
         search_bar = self.page.locator('//input[@role="combobox"]')
@@ -31,6 +25,15 @@ class Scraper:
         self.page.goto(BASE_URL)
         self.search(searchQuery)
 
+    def run(self, searchQuery):
+        with Stealth().use_sync(sync_playwright()) as playwright:
+            self.browser = playwright.chromium.launch(headless=False)
+            self.page = self.browser.new_page()
+
+            self.scrape(searchQuery)
+
+            self.browser.close()
+
 class Filter:
     def __init__(self):
         self.statusType = 'ForRent'
@@ -44,14 +47,5 @@ class Filter:
             setattr(self, attrName, attrValue)
 
 if __name__ == '__main__':
-    # with Stealth().use_sync(sync_playwright()) as playwright:
-    #     Scraper(playwright, 'Montgomery, AL')
-
-    f = Filter()
-    d = {
-        'statusType': 'ForSale',
-        'minBedrooms': 2
-    }
-    print(f.statusType, f.maxPrice, f.minBedrooms)
-    f.setFilterParameters(**d)
-    print(f.statusType, f.maxPrice, f.minBedrooms)
+    scraper = Scraper()
+    scraper.run('Portland, ME')
