@@ -4,7 +4,7 @@ from playwright_stealth import Stealth
 import os
 import json
 from helpFuncs import *
-from extractors import CatalogExtractor, CatalogDomExtractor
+from extractors import *
 
 BASE_URL = 'https://www.zillow.com/'
 
@@ -75,6 +75,41 @@ class Scraper:
 
             self.browser.close()
 
+    def getDetailInfo(self, urlList = None, filePath = None, pathToSave = './detail_data.json'):
+        if filePath is None:
+            filePath = self.pathToDataFile
+
+        if urlList is None:
+            if filePath is None:
+                return None
+            with open(filePath, 'r') as f:
+                data = json.load(f)
+            urlList = [item['url'] for item in data]
+
+        # Now start scraping
+        detailInfo = []
+
+        for i, url in enumerate(urlList):
+            try:
+                self.page.goto(url, wait_until="domcontentloaded")
+                dataContainer = self.page.wait_for_selector('script#__NEXT_DATA__', state='attached', timeout=25000)
+                data = json.loads(dataContainer.inner_text())
+                
+                detailData = extractData(data, DetailDOMExtractor)
+                detailInfo.append(detailData)
+            except Exception as e:
+                print(f'{i} failed', e)
+            
+            self.page.mouse.wheel(0, 1000)
+            self.page.wait_for_timeout(rateLimiter(13))
+
+        with open(pathToSave, 'w') as f:
+            json.dump(detailInfo, f, indent=4)
+
+        print('Success')
+        print(len(detailInfo))
+
+        
 class Filter:
     def __init__(self):
         self.statusType = 'ForRent'
