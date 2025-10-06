@@ -1,3 +1,5 @@
+import json 
+
 class Extractor:
     def __init__(self):
         self.pathToData: list = []
@@ -44,6 +46,42 @@ class CatalogDomExtractor(CatalogExtractor):
     def __init__(self):
         super().__init__()
         self.pathToData = ['props', 'pageProps', 'searchPageState', 'cat1', 'searchResults', 'listResults']
+
+class CacheExtractor(Extractor):
+    def __init__(self):
+        super().__init__()
+        self.pathToData = ['props', 'pageProps', 'componentProps', 'gdpClientCache']
+
+    def extract(self, response_json):
+        return json.loads(super().extract(response_json))
+
+class DetailDOMExtractor(Extractor):
+    def __init__(self):
+        super().__init__()
+
+    def extract(self, response_json):
+        dataContainer = extractData(response_json, CacheExtractor)
+        
+        for k, v in dataContainer.items():
+            property_data = v.get('property')
+            break
+        if property_data:
+            return {
+                'zpid': property_data.get('zpid'),
+                'status': property_data.get('homeStatus'),
+                'type': property_data.get('homeType'),
+                'price': property_data.get('price'),
+                'living area': property_data.get('livingArea'),
+                'year built': property_data.get('resoFacts').get('yearBuilt'),
+                'bedrooms': property_data.get('bedrooms'),
+                'bathrooms': property_data.get('bathrooms'),
+                'agent name': property_data.get('attributionInfo').get('agentName'),
+                'phone number': property_data.get('attributionInfo').get('agentPhoneNumber'),
+                'lot size': property_data.get('resoFacts').get('lotSize'),
+                'price per sqft': property_data.get('resoFacts').get('pricePerSquareFoot'),
+                'parking capacity': property_data.get('resoFacts').get('parkingCapacity')
+            }
+
 
 def extractData(json_obj, extractor: Extractor):
     return extractor().extract(json_obj)
