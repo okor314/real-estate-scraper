@@ -1,6 +1,7 @@
 from playwright.sync_api import sync_playwright, Playwright
 from playwright_stealth import Stealth
 
+import os
 import json
 from helpFuncs import *
 from extractors import CatalogExtractor, CatalogDomExtractor
@@ -9,7 +10,7 @@ BASE_URL = 'https://www.zillow.com/'
 
 class Scraper:
     def __init__(self):
-        pass
+        self.pathToDataFile = None
 
     def search(self, searchQuery: str):
         search_bar = self.page.locator('//input[@role="combobox"]')
@@ -57,6 +58,9 @@ class Scraper:
         finally:
             with open(pathToSave, 'w') as f:
                 json.dump(allApartments, f, indent=4)
+
+                # Save path of that file to use it in detail scraping
+                self.pathToDataFile = os.path.realpath(f.name)
 
     def run(self, searchQuery):
         with Stealth().use_sync(sync_playwright()) as playwright:
