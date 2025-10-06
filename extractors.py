@@ -1,6 +1,6 @@
 class Extractor:
     def __init__(self):
-        self.pathToData: list
+        self.pathToData: list = []
 
     def extract(self, response_json):
         dataContainer = response_json
@@ -44,7 +44,10 @@ class CatalogDomExtractor(CatalogExtractor):
     def __init__(self):
         super().__init__()
         self.pathToData = ['props', 'pageProps', 'searchPageState', 'cat1', 'searchResults', 'listResults']
-    
+
+def extractData(json_obj, extractor: Extractor):
+    return extractor().extract(json_obj)
+
 if __name__ == "__main__":
     d = {'cat1': {'searchResults': {'listResults': 'pupupu'}}}
     print(CatalogExtractor().extract(d))
