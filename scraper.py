@@ -62,7 +62,7 @@ class Scraper:
                 # Save path of that file to use it in detail scraping
                 self.pathToDataFile = os.path.realpath(f.name)
 
-    def run(self, searchQuery):
+    def run(self, *args, mode='main', **kwargs):
         with Stealth().use_sync(sync_playwright()) as playwright:
             self.browser = playwright.chromium.launch(headless=False)
             self.page = self.browser.new_page()
@@ -71,7 +71,11 @@ class Scraper:
                else route.continue_()
             )
 
-            self.scrape(searchQuery)
+            if mode == 'main':
+                self.scrape(*args, **kwargs)
+            elif mode == 'detail':
+                print(1)
+                self.getDetailInfo(*args, **kwargs)
 
             self.browser.close()
 
@@ -85,7 +89,7 @@ class Scraper:
             with open(filePath, 'r') as f:
                 data = json.load(f)
             urlList = [item['url'] for item in data]
-
+        print(urlList)
         # Now start scraping
         detailInfo = []
 
@@ -124,4 +128,4 @@ class Filter:
 
 if __name__ == '__main__':
     scraper = Scraper()
-    scraper.run('Portland, ME')
+    scraper.run(mode='detail', filePath='./data.json')
